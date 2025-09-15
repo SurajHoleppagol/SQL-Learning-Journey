@@ -212,3 +212,145 @@ values(
 	SELECT DISTINCT(deptno) AS dept_number
 	FROM emp;
 ```
+## Topic 2: AND, OR, NOT + ORDER BY + LIMIT / OFFSET
+
+- **All Topic 2 queries are in** [`Topic2_AND_OR_NOT_ORDERBY_LIMIT_OFFSET.sql`](Topic2_AND_OR_NOT_ORDERBY_LIMIT_OFFSET.sql).
+
+**Q7: Employees in dept 10 and earning > 1500.**
+
+```sql
+	SELECT ename,deptno,sal
+	FROM emp
+	WHERE deptno=10 AND sal>1500;
+```
+
+**Q8: Employees in dept 20 or job = 'CLERK'.**
+
+```sql
+	SELECT ename,deptno,job
+	FROM emp
+	WHERE deptno=20 OR job='CLERK';
+```
+
+**Q9: Employees not in dept 30.**
+
+```sql
+	SELECT ename,deptno
+	FROM emp
+	WHERE deptno NOT IN (30);
+```
+	
+**Q10: Employees sorted by salary ascending.**
+
+```sql
+	SELECT ename,sal
+	FROM emp
+	ORDER BY sal ASC;
+```
+
+**Q11: Employees sorted by job, then salary desc.**
+
+```sql
+	SELECT ename,job,sal
+	FROM emp
+	ORDER BY job,sal DESC;
+```
+
+**Q12: Top 5 highest-paid employees.**
+
+```sql
+	SELECT ename,sal
+	FROM emp
+	ORDER BY sal DESC
+	LIMIT 5;
+```
+
+**Q13: Skip top 3 salaries, show next 5.**
+
+```sql
+	SELECT ename,sal
+	FROM emp
+	ORDER BY sal DESC
+	LIMIT 5 OFFSET 3;
+```
+
+## Topic 3: GROUP BY + SUM/AVG/COUNT/MAX/MIN + HAVING + COUNT DISTINCT
+
+- **All Topic 3 queries are in** [`Topic3_GROUPBY_AGG_HAVING.sql`](Topic3_GROUPBY_AGG_HAVING.sql).
+
+
+**Q14: Total salary by department.**
+
+```sql
+	SELECT deptno,SUM(sal) AS total_salary
+	FROM emp
+	GROUP BY deptno;
+  ```
+
+**Q15: Average salary by job.**
+
+```sql
+	SELECT job,ROUND(AVG(sal),2) AS Avg_Sal
+	FROM emp
+	GROUP BY job;
+```
+
+**Q16: Count employees in each dept.**
+
+```sql
+	SELECT deptno,COUNT(*) AS No_of_employees
+	FROM emp
+	GROUP BY deptno;
+```
+
+**Q17: Departments with total salary > 5000.**
+
+```sql
+	SELECT deptno,SUM(sal) AS total_sal
+	FROM emp
+	GROUP BY deptno
+	HAVING SUM(sal) > 5000;
+```
+
+**Q18: Jobs with more than 3 employees.**
+
+```sql
+	SELECT job,COUNT(*) AS No_of_employees
+	FROM emp
+	GROUP BY job
+	HAVING COUNT(*)>3;
+```
+
+**Q19: Count distinct jobs.**
+
+```sql
+	SELECT COUNT(DISTINCT(job)) AS No_of_job
+	FROM emp;
+```
+
+**Q20: Count distinct departments with employees.**
+
+```sql
+	SELECT COUNT(DISTINCT(deptno)) AS No_of_deptno
+	FROM emp;
+```
+
+## Topic 4: ROLLUP / CUBE
+
+- **All Topic 4 queries are in** [`Topic4_ROLLUP_CUBE.sql`](Topic4_ROLLUP_CUBE.sql).
+
+**Q21: Salary sum by dept with grand total (ROLLUP).**
+
+```sql
+	SELECT deptno, SUM(sal) AS total_salary
+	FROM emp
+	GROUP BY ROLLUP(deptno);
+```
+
+**Q22: Salary sum by dept & job (CUBE).**
+
+```sql
+	SELECT deptno, job, SUM(sal) AS total_salary
+	FROM emp
+	GROUP BY CUBE(deptno, job);
+```
