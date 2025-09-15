@@ -167,3 +167,51 @@ values(
  1300, null, 10  
 )
 ```
+<<<<<<< HEAD
+=======
+## Topic 1: SELECT, WHERE, DISTINCT 
+
+- **All Topic 1 queries are in**[`Topic1_SELECT_WHERE_DISTINCT.sql`](Topic1_SELECT_WHERE_DISTINCT.sql).
+
+**Q1: Show employee names and salaries.**
+
+```sql
+	SELECT ename,sal
+	FROM emp;
+```
+**Q2: Show all departments.**
+
+```sql
+	SELECT dname
+	FROM dept;
+```
+
+**Q3: Employees with salary > 2000.**
+
+```sql
+	SELECT ename,sal
+	FROM emp
+	WHERE sal>2000;
+```
+**Q4: Employees hired after 01-Jan-81.**
+
+```sql
+	SELECT ename,hiredate
+	FROM emp
+	WHERE hiredate > '01-Jan-81';
+```
+
+**Q5: List unique job titles.**
+
+```sql
+	SELECT DISTINCT(job) AS job_titles
+	FROM emp;
+```
+	
+**Q6: List unique dept numbers.**
+
+```sql
+	SELECT DISTINCT(deptno) AS dept_number
+	FROM emp;
+```
+>>>>>>> 8413b25 (Topic 1: SELECT, WHERE, DISTINCT queries)
