@@ -167,8 +167,6 @@ values(
  1300, null, 10  
 )
 ```
-<<<<<<< HEAD
-=======
 ## Topic 1: SELECT, WHERE, DISTINCT 
 
 - **All Topic 1 queries are in**[`Topic1_SELECT_WHERE_DISTINCT.sql`](Topic1_SELECT_WHERE_DISTINCT.sql).
@@ -214,4 +212,3 @@ values(
 	SELECT DISTINCT(deptno) AS dept_number
 	FROM emp;
 ```
->>>>>>> 8413b25 (Topic 1: SELECT, WHERE, DISTINCT queries)
