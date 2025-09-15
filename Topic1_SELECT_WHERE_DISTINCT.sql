@@ -20,7 +20,7 @@
 
 	SELECT ename,hiredate
 	FROM emp
-	WHERE hiredate > '01-Jan-81';
+	WHERE hiredate > DATE '1981-01-01';
 
 -- Q5: List unique job titles.
 
