@@ -750,3 +750,4 @@ values(
 											FROM emp
 											WHERE ename='SCOTT');
 ```
+ 
