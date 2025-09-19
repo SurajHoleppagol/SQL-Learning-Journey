@@ -633,3 +633,120 @@ values(
 	FROM reporting_chain
 	ORDER BY level, ename;
 ```
+## Topic 7: Conditional Logic & Functions
+
+- **All Topic 7 queries are in** [`Topic7_Conditional_Functions.sql`](Topic7_Conditional_Functions.sql).
+
+## CASE
+
+**Q1 Show employee names and salaries, and label them as ‘High Salary’ if > 3000, else ‘Normal Salary’.**
+
+```sql
+	SELECT ename,sal,
+			CASE
+			 	WHEN sal > 3000 THEN 'High Salary'
+			ELSE 'Normal Salary'
+	END AS sal_category
+	FROM emp;
+```
+	
+**Q2 Show employees with a column Grade:**
+**A if salary > 3000,  B if between 2000–3000,  C otherwise**
+
+```sql
+	SELECT ename,sal,
+		CASE 
+			WHEN sal > 3000 THEN 'A'
+			WHEN sal BETWEEN 2000 AND 3000 THEN 'B'
+		ELSE 'C'
+	END AS "Grade"
+	FROM emp;
+```
+	
+**Q3 Show department-wise employee counts, but display "SMALL" if count < 3, "MEDIUM" if 3–5, "LARGE" if > 5.**
+
+```sql
+	SELECT deptno,COUNT(*),
+			CASE
+				WHEN COUNT(*) < 3 THEN 'SMALL'
+				WHEN COUNT(*) BETWEEN 3 AND 5 THEN 'MEDIUM'
+				WHEN COUNT(*) > 5 THEN 'LARGE'
+			ELSE 'NORMAL'
+			END AS "Dept_size"
+	FROM emp
+	GROUP BY deptno;
+```
+
+## COALESCE / NULL handling
+
+**Q4 Display employee names and commission. If commission is NULL, show 0.**
+
+```sql
+	SELECT ename,COALESCE(comm,0) AS commission
+	FROM emp;
+```
+	
+**Q5 Show ename and sal + NVL(comm, 0) as total compensation.**
+
+```sql
+	SELECT ename,sal+COALESCE(comm,0) AS total_compensation
+	FROM emp;
+```
+	
+**Q6 List employees who do not have a manager (mgr is NULL). Use COALESCE to show "No Manager" instead of NULL.**
+
+```sql
+	SELECT ename,COALESCE(mgr::text,'No Manager') AS manager
+	FROM emp;
+```
+
+## String Functions
+
+**Q7 Show all employee names in uppercase.**
+
+```sql
+	SELECT ename, UPPER(ename) AS upper_name
+	FROM emp;
+```
+	
+**Q8 Show first 3 characters of employee names.**
+
+```sql
+	SELECT SUBSTR(ename,1,3)
+	FROM emp;
+```
+
+**Q9 Show employee names with their length, ordered by name length descending.**
+
+```sql
+	SELECT ename,LENGTH(ename) AS "Name_Length"
+	FROM emp
+	ORDER by 2 DESC;
+```
+
+## Date Functions
+
+**Q10 Show employees hired in the year 1981.**
+
+```sql
+	SELECT ename,hiredate
+	FROM emp
+	WHERE EXTRACT(YEAR FROM hiredate)=1981;
+```
+	
+**Q11 Show employees and number of years they have worked till today.**
+
+```sql
+	SELECT ename,EXTRACT(YEAR FROM AGE(CURRENT_DATE,hiredate)) AS years_worked
+	FROM emp;
+```
+	
+**Q12 Find employees who joined in the same month as ‘SCOTT’.**
+
+```sql
+	SELECT ename,hiredate
+	FROM emp
+	WHERE EXTRACT(MONTH FROM hiredate) = (SELECT EXTRACT(MONTH FROM hiredate)
+											FROM emp
+											WHERE ename='SCOTT');
+```
