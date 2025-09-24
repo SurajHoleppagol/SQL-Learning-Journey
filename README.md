@@ -965,3 +965,64 @@ values(
 	
 	COMMIT;
 ```
+
+## Stored Procedures / Functions
+
+**Q8  Create a stored function get_bonus(sal NUMERIC) that returns 10% of salary.**
+
+```sql	
+	CREATE OR REPLACE FUNCTION get_bonus(sal NUMERIC)
+	RETURNS NUMERIC
+	LANGUAGE plpgsql
+	AS $$
+	BEGIN
+		RETURN sal * 0.10;
+	END;
+	$$;
+
+	SELECT ename, sal, get_bonus(sal) AS bonus
+	FROM emp;
+```
+
+**Q9 Create a procedure raise_salary(dept_id INT, percent NUMERIC) that increases salaries of all employees in that department.**
+
+```sql
+	CREATE OR REPLACE PROCEDURE raise_salary(p_deptno INT, percent NUMERIC)
+	LANGUAGE plpgsql
+	AS $$
+		BEGIN
+				UPDATE emp
+				SET sal=sal+sal*percent
+				WHERE deptno=p_deptno;
+		RAISE NOTICE 'Salaries in department % raised by % percent', p_deptno, percent * 100;
+	END;
+	$$;
+
+	CALL raise_salary(10, 0.10);
+```
+
+**Q10 Write a procedure transfer_employee(emp_id INT, new_dept INT) that: Updates employee’s department. If new_dept does not exist, rollback and raise an exception.**
+
+```sql
+	CREATE OR REPLACE PROCEDURE transfer_employee(p_emp_id INT, p_new_dept INT)
+	LANGUAGE plpgsql
+	AS $$
+			BEGIN
+	    -- 1. Check if department exists
+	    IF NOT EXISTS (SELECT 1 FROM dept WHERE deptno = p_new_dept) THEN
+	        RAISE EXCEPTION 'Department % does not exist. Rolling back...', p_new_dept;
+	    END IF;
+	
+	    -- 2. Update employee’s department
+	    UPDATE emp
+	    SET deptno = p_new_dept
+	    WHERE empno = p_emp_id;
+	
+	    -- 3. Optional confirmation
+	    RAISE NOTICE 'Employee % moved to department %', p_emp_id, p_new_dept;
+	END;
+	$$;
+	
+	CALL transfer_employee(101, 50);   -- If dept 50 exists, update happens
+	CALL transfer_employee(101, 999);  -- If dept 999 does not exist → exception, rollback		
+```
