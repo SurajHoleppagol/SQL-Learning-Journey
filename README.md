@@ -877,7 +877,7 @@ values(
 ```
 ## Topic 9: Data Manipulation & Maintenance
 
-- **All Topic 8 queries are in** [`Topic9_Data_Manipulation_&_Maintenance.sql`](Topic9_Data_Manipulation_&_Maintenance.sql).
+- **All Topic 9 queries are in** [`Topic9_Data_Manipulation_&_Maintenance.sql`](Topic9_Data_Manipulation_&_Maintenance.sql).
 
 ## INSERT, UPDATE, DELETE
 
@@ -911,7 +911,7 @@ values(
 	FROM emp
 	WHERE deptno=10;
 ```
-## NOTE: Adding 1000 to empno to avoid primary key conflict.
+**NOTE: Adding 1000 to empno to avoid primary key conflict.**
 
 ## Transactions
 
@@ -1026,3 +1026,282 @@ values(
 	CALL transfer_employee(101, 50);   -- If dept 50 exists, update happens
 	CALL transfer_employee(101, 999);  -- If dept 999 does not exist → exception, rollback		
 ```
+
+## Topic 10: Views & Optimization
+
+- **All Topic 10 queries are in** [`Topic10_Views_&_Optimization.sql`](Topic10_Views_&_Optimization.sql).
+
+## Views & Materialized Views
+
+**Q1 Create a view emp_dept_view that shows employee name, job, salary, and department name by joining emp and dept.**
+
+```sql
+	CREATE VIEW emp_dept_view AS
+		SELECT e.ename,e.job,e.sal,d.dname
+		FROM emp e JOIN dept d ON e.deptno = d.deptno;
+
+	SELECT * FROM emp_dept_view;
+```
+
+**Q2 Select all employees from emp_dept_view who work in department 'SALES'.**
+
+```sql
+	CREATE OR REPLACE VIEW emp_dept_sales AS
+		SELECT e.empno,e.ename
+		FROM emp e JOIN dept d ON d.deptno = e.deptno
+		WHERE d.dname='SALES';
+
+		SELECT * FROM emp_dept_sales;
+```
+
+**Q3 Create a view high_salary_emp that shows employees earning more than the average salary of their department.**
+
+```sql
+	CREATE VIEW high_salary_emp AS
+	    SELECT e.ename, e.sal, e.deptno
+	    FROM emp e
+	    JOIN (
+	        SELECT deptno, AVG(sal) AS avg_sal
+	        FROM emp
+	        GROUP BY deptno
+	    ) d_avg ON e.deptno = d_avg.deptno
+	    WHERE e.sal > d_avg.avg_sal;
+
+	SELECT * FROM high_salary_emp;
+```
+
+**Q4 Create a view emp_basic that only shows empno, ename, sal.**
+
+```sql
+	CREATE VIEW emp_details AS
+		SELECT empno, ename, sal
+		FROM emp
+```
+
+- **Try to update the salary of employee 'SMITH' using this view.**
+
+```sql
+	UPDATE emp_details
+	SET sal=sal+100
+	WHERE ename='SMITH'
+```
+
+- **Verify if the base table emp reflects the change.**
+
+```sql
+	SELECT empno, ename, sal
+	FROM emp
+	WHERE ename='SMITH';
+```
+
+**Q5 Create a materialized view dept_average_sal that shows the average salary per department.**
+
+```sql
+	CREATE MATERIALIZED VIEW dept_average_sal AS
+		SELECT deptno,ROUND(AVG(sal),2) AS avg_sal
+		FROM emp
+		GROUP BY deptno
+
+	SELECT * FROM dept_average_sal;
+```
+
+- **Refresh the materialized view after inserting a new employee in dept 20.**
+
+```sql
+	INSERT INTO emp (empno,ename,job,mgr,hiredate,sal,comm,deptno)
+	VALUES (9800,'MICHEL','SALES',7782,'1982-10-23',3500,NULL,20)
+	
+	REFRESH MATERIALIZED VIEW dept_average_sal;
+```
+
+**Q6 Nested View Create a view senior_emp that shows employees with salary > 3000.**
+
+```sql
+	CREATE VIEW senior_emp AS
+	    SELECT empno, ename, sal, deptno, job
+	    FROM emp
+	    WHERE sal > 3000;
+
+	SELECT * FROM senior_emp;
+```
+		
+- **Then create another view dept_senior that counts how many senior employees are in each department.**
+
+	- **Nested view: count senior employees per department**
+```sql
+		CREATE VIEW dept_senior AS
+		    SELECT deptno, COUNT(*) AS senior_emp_count
+		    FROM senior_emp
+		    WHERE job IN ('MANAGER','PRESIDENT')
+		    GROUP BY deptno;
+	
+	SELECT * FROM dept_senior;
+```
+
+- **Query which department has the maximum senior employees.**
+
+	- **Query department(s) with maximum senior employees**
+
+```sql
+	SELECT deptno, senior_emp_count
+	FROM dept_senior
+	WHERE senior_emp_count = (SELECT MAX(senior_emp_count) FROM dept_senior);
+	
+	SELECT MAX(senior_emp_count) FROM max_senior_emp;
+```
+
+## Indexes / Query Optimization
+
+**Q7 Create an index on the sal column of emp table.**
+```sql
+	CREATE INDEX idx_emp_sal ON emp(sal);
+```
+
+- **Run a query to find all employees with salary > 4000.**
+
+```sql
+	SELECT * FROM emp
+	WHERE sal > 4000;
+```
+	
+- **Check the query plan using EXPLAIN.**
+
+```sql
+	EXPLAIN SELECT * FROM emp WHERE sal > 4000;
+```
+
+**Q8 Create a composite index on (deptno, job) in the emp table.**
+
+```sql
+	CREATE INDEX idx_emp_dept ON emp(deptno, job);
+```
+
+- **Run a query to find all employees who are CLERK in dept 20.**
+
+```sql
+	SELECT * FROM emp WHERE job='CLERK' AND deptno=20;
+```
+
+- **Compare query performance with/without the index.**
+
+	- **WITH INDEX**
+
+	```sql	
+		CREATE INDEX idx_emp_dept ON emp(deptno, job);
+
+		EXPLAIN SELECT * FROM emp WHERE job='CLERK' AND deptno=20;
+	```
+	- **WITHOUT INDEX**
+
+	```sql
+		DROP INDEX IF EXISTS idx_emp_dept;
+
+		EXPLAIN SELECT * FROM emp WHERE job='CLERK' AND deptno=20;
+	```
+	
+**Q9 Create a unique index on dname.**
+
+```sql
+	CREATE UNIQUE INDEX idx_dept_dname ON dept(dname);
+```
+
+- **Try inserting a duplicate department name and see what happens.**
+	```sql
+		INSERT INTO dept (deptno,dname)
+		VALUES (60,'SALES')
+	```
+	
+
+**Q10 Covering Index - Suppose queries often ask for ename, job, sal of employees where deptno=10.**
+- **Design an index that makes this query faster without touching the emp table directly.**
+
+```sql
+	CREATE INDEX idx_dept_emp ON emp(deptno) INCLUDE (ename,job,sal);	
+```
+
+**Q11 Query Optimization -You have a slow query:**
+
+```sql
+	SELECT e.ename, d.dname, e.sal
+	FROM emp e
+	JOIN dept d ON e.deptno = d.deptno
+	WHERE e.sal > 3000
+	ORDER BY e.sal DESC; 
+```
+
+- **Use EXPLAIN ANALYZE to check performance.**
+
+	```sql
+		EXPLAIN SELECT e.ename, d.dname, e.sal
+	FROM emp e
+	JOIN dept d ON e.deptno = d.deptno
+	WHERE e.sal > 3000
+	ORDER BY e.sal DESC;
+	```
+
+
+- **optimizations (indexes, materialized views, query rewrite).**
+
+	- **materialized view**
+```sql
+	CREATE MATERIALIZED VIEW emp_sal_high AS
+		SELECT e.ename, d.dname, e.sal
+			FROM emp e
+			JOIN dept d ON e.deptno = d.deptno
+			WHERE e.sal > 3000;
+
+	SELECT * FROM emp_sal_high;
+```
+
+- **Index**
+	
+```sql
+	CREATE INDEX idx_emp_sal_dept ON emp(sal DESC, deptno);
+```
+	
+**Q12 (Index Maintenance)**
+
+- **Drop all indexes on emp.**
+
+```sql
+	DROP INDEX IF EXISTS idx_emp_sal;
+	DROP INDEX IF EXISTS idx_emp_dept;
+	DROP INDEX IF EXISTS idx_dept_dname;
+	DROP INDEX IF EXISTS idx_dept_emp;
+```
+	
+- **Searching by ename (exact match).**
+
+```sql
+	CREATE INDEX idx_emp_ename ON emp(ename);
+```
+
+- **Searching employees in a department with salary range.**
+
+```sql
+	CREATE INDEX idx_emp_dept_sal ON emp(deptno, sal);
+```
+
+- **Aggregating salaries by dept.**
+
+```sql
+	CREATE INDEX idx_emp_deptno ON emp(deptno);
+```
+
+- **Explain your choices.**
+
+	- **idx_emp_ename: Speeds up exact name searches.**
+
+	- **idx_emp_dept_sal: Composite index allows filtering employees by department and salary range efficiently.**
+
+	- **idx_emp_deptno: Helps grouping or aggregating salaries by department.**
+
+**This strategy balances search performance, range filtering, and aggregation optimization.**
+
+## Conclusion
+**This repository contains a complete SQL journey covering topics from basics to advanced concepts, including DML, DDL,** **Views, Materialized Views, Indexing, Stored Procedures, Query Optimization, and more.**  
+**All exercises are tested in PostgreSQL.**  
+
+## Completion SQL Journey  
+**Next: Building a hands-on SQL Project to showcase real-world data analytics skills.**
+
