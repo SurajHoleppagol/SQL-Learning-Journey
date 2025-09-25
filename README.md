@@ -1302,6 +1302,6 @@ values(
 **This repository contains a complete SQL journey covering topics from basics to advanced concepts, including DML, DDL,** **Views, Materialized Views, Indexing, Stored Procedures, Query Optimization, and more.**  
 **All exercises are tested in PostgreSQL.**  
 
-## Completion SQL Journey  
+## Completion of SQL Journey  
 **Next: Building a hands-on SQL Project to showcase real-world data analytics skills.**
 
